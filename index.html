@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POLISH IAMD C2 - Kaliningrad Corridor Decision Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #000000;
+            --dark: #0a0a0a;
+            --border: #1a1a1a;
+            --gray: #64748b;
+            --white: #f1f5f9;
+            --red: #dc143c;     /* Polish red */
+            --white-pl: #ffffff; /* Polish white */
+            --green: #10b981;
+            --amber: #f59e0b;
+            --red-alert: #ef4444;
+        }
+
+        body {
+            font-family: 'IBM Plex Mono', 'SF Mono', 'Monaco', monospace;
+            background: var(--black);
+            color: var(--white);
+            font-size: 13px;
+            line-height: 1.4;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 48px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: linear-gradient(90deg, var(--red) 0%, var(--black) 50%);
+        }
+
+        .logo {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .flag {
+            width: 32px;
+            height: 20px;
+            background: linear-gradient(to bottom, var(--white-pl) 50%, var(--red) 50%);
+        }
+
+        .system-status {
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: pulse 2s ease infinite;
+        }
+
+        .status-dot.green { background: var(--green); }
+        .status-dot.amber { background: var(--amber); }
+        .status-dot.red { background: var(--red-alert); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .main {
+            height: calc(100vh - 48px);
+            display: grid;
+            grid-template-columns: 380px 1fr 420px;
+        }
+
+        .column {
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+        }
+
+        .column:last-child {
+            border-right: none;
+        }
+
+        .column-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: var(--dark);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .form-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--gray);
+            margin-bottom: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            color: var(--gray);
+            margin-bottom: 4px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            background: var(--dark);
+            border: 1px solid var(--border);
+            color: var(--white);
+            padding: 6px 8px;
+            font-size: 12px;
+            font-family: inherit;
+            border-radius: 2px;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--red);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+        }
+
+        input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        button {
+            background: var(--red);
+            color: var(--white);
+            border: none;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 2px;
+            letter-spacing: 0.05em;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #b01030;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: var(--border);
+            color: var(--gray);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .threat-display {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            padding: 12px;
+            margin-top: 8px;
+            font-size: 11px;
+        }
+
+        .threat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .threat-row .label {
+            color: var(--gray);
+        }
+
+        .threat-row .value {
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .priority-critical { background: var(--red-alert); color: var(--white); }
+        .priority-high { background: var(--amber); color: var(--black); }
+        .priority-medium { background: var(--gray); color: var(--white); }
+        .priority-low { background: var(--border); color: var(--gray); }
+
+        .results-container {
+            padding: 16px;
+        }
+
+        .recommendation-card {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 2px;
+        }
+
+        .recommendation-card.top {
+            border-color: var(--red);
+            border-width: 2px;
+        }
+
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .rec-rank {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--red);
+        }
+
+        .rec-coherence {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .rec-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--white);
+        }
+
+        .rec-description {
+            font-size: 11px;
+            line-height: 1.5;
+            color: var(--gray);
+            white-space: pre-wrap;
+            margin-bottom: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .rec-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 10px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .rec-meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .rec-meta-label {
+            color: var(--gray);
+        }
+
+        .rec-meta-value {
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--gray);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--red);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--red-alert);
+            padding: 12px;
+            margin: 16px;
+            border-radius: 2px;
+            font-size: 11px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+            font-size: 12px;
+        }
+
+        .sensor-contact {
+            background: rgba(220, 20, 60, 0.05);
+            border: 1px solid var(--border);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 2px;
+            font-size: 11px;
+        }
+
+        .sensor-contact-header {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--white);
+        }
+
+        .sensor-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .coalition-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 9px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .coalition-us { background: #0052a5; color: white; }
+        .coalition-uk { background: #c8102e; color: white; }
+        .coalition-no { background: #ba0c2f; color: white; }
+        .coalition-pl { background: var(--red); color: white; }
+
+        .degraded-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--amber);
+            padding: 8px;
+            margin: 8px 16px;
+            border-radius: 2px;
+            font-size: 10px;
+            color: var(--amber);
+        }
+
+        .performance-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 16px;
+            background: var(--dark);
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--red);
+        }
+
+        .stat-label {
+            color: var(--gray);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <div class="flag"></div>
+            <span>POLISH IAMD C2</span>
+            <span style="color: var(--gray); font-size: 11px; font-weight: 400;">Kaliningrad Corridor</span>
+        </div>
+        <div class="system-status">
+            <div class="status-item">
+                <div class="status-dot green" id="arbiterStatus"></div>
+                <span>ARBITER</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot" id="gpsStatus"></div>
+                <span>GPS</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot" id="link16Status"></div>
+                <span>Link 16</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot" id="natoStatus"></div>
+                <span>NATO CAOC</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <!-- Left Column: Threat Input -->
+        <div class="column">
+            <div class="column-header">SYTUACJA POWIETRZNA / THREAT INPUT</div>
+
+            <div class="form-section">
+                <div class="section-title">Pochodzenie zagrożenia</div>
+                <div class="form-group">
+                    <label>Źródło</label>
+                    <select id="threatOrigin">
+                        <option value="Kaliningrad">Kaliningrad</option>
+                        <option value="Belarus">Belarus</option>
+                        <option value="Ukraine spillover">Ukraine spillover</option>
+                        <option value="Unknown">Nieznane</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rodzaj zagrożenia</label>
+                    <select id="threatType">
+                        <option value="Reconnaissance (IL-20, Tu-134)">Rozpoznanie (IL-20, Tu-134)</option>
+                        <option value="Fighter/Bomber">Myśliwiec/Bombowiec</option>
+                        <option value="Transport Aircraft">Samolot transportowy</option>
+                        <option value="Iskander Ballistic Missile">Pocisk balistyczny Iskander</option>
+                        <option value="Kalibr Cruise Missile">Pocisk manewrujący Kalibr</option>
+                        <option value="Kh-101 Cruise Missile">Pocisk manewrujący Kh-101</option>
+                        <option value="Shahed-136 Drone">Dron Shahed-136</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priorytet</label>
+                    <select id="priority">
+                        <option value="Critical">Krytyczny</option>
+                        <option value="High" selected>Wysoki</option>
+                        <option value="Medium">Średni</option>
+                        <option value="Low">Niski</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">Parametry celu</div>
+                <div class="form-group">
+                    <label>Namiar (°)</label>
+                    <input type="number" id="bearing" value="84" min="0" max="360">
+                </div>
+                <div class="form-group">
+                    <label>Odległość (km)</label>
+                    <input type="number" id="rangeKm" value="46" min="0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Wysokość (m)</label>
+                    <input type="number" id="altitude" value="7400" min="0" step="100">
+                </div>
+                <div class="form-group">
+                    <label>Prędkość (kts)</label>
+                    <input type="number" id="speed" value="385" min="0" step="10">
+                </div>
+                <div class="form-group">
+                    <label>Czas do granicy (min)</label>
+                    <input type="number" id="timeToBorder" value="8.5" min="0" step="0.5">
+                </div>
+                <div class="form-group">
+                    <label>Status transpondera</label>
+                    <select id="transponder">
+                        <option value="ON">Włączony</option>
+                        <option value="OFF" selected>Wyłączony</option>
+                        <option value="INTERMITTENT">Przerywany</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">Kontekst operacyjny</div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="gpsJamming" checked>
+                    <label for="gpsJamming">Zakłócenia GPS (Kaliningrad)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="link16Jam" checked>
+                    <label for="link16Jam">Zakłócenia Link 16</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="natoCaoc">
+                    <label for="natoCaoc">Połączenie z NATO CAOC</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="kaliningradCorridor" checked>
+                    <label for="kaliningradCorridor">Aktywny korytarz Kaliningrad</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="suwalki" checked>
+                    <label for="suwalki">Monitoring Szczeliny Suwalskiej</label>
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label>Wzorzec historyczny</label>
+                    <textarea id="historicalPattern">Rosyjskie loty IL-20: 2-4 razy miesięcznie, zwykle z transponderem, okazjonalne naruszenia 2-3km</textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <button onclick="processScenario()">
+                    GENERUJ REKOMENDACJE ARBITER
+                </button>
+                <button class="btn-secondary" onclick="loadKaliningradScenario()" style="margin-top: 8px;">
+                    Załaduj scenariusz Kaliningrad
+                </button>
+            </div>
+        </div>
+
+        <!-- Middle Column: Results -->
+        <div class="column">
+            <div class="column-header">REKOMENDACJE TAKTYCZNE / ARBITER OUTPUT</div>
+
+            <div id="performanceStats" style="display: none;" class="performance-stats">
+                <div class="stat">
+                    <div class="stat-value" id="totalTime">--</div>
+                    <div class="stat-label">TOTAL MS</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="arbiterTime">--</div>
+                    <div class="stat-label">ARBITER MS</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="optionsCount">--</div>
+                    <div class="stat-label">OPCJE</div>
+                </div>
+            </div>
+
+            <div id="degradedWarning" style="display: none;" class="degraded-warning">
+                ⚠️ ZAKŁÓCONA ŁĄCZNOŚĆ: ARBITER 26MB działa lokalnie (air-gapped) - decyzja możliwa mimo zakłóceń rosyjskich
+            </div>
+
+            <div id="resultsContainer" class="results-container">
+                <div class="empty-state">
+                    <div style="font-size: 32px; margin-bottom: 12px;">🎯</div>
+                    <div>Wprowadź parametry zagrożenia i wygeneruj rekomendacje ARBITER</div>
+                    <div style="margin-top: 8px; font-size: 10px;">
+                        System optymalizuje parowanie broń-cel dla polskiej IAMD
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Assets -->
+        <div class="column">
+            <div class="column-header">DOSTĘPNE SIŁY / AVAILABLE ASSETS</div>
+
+            <div class="form-section">
+                <div class="section-title">Polskie systemy <span class="coalition-badge coalition-pl">PL</span></div>
+
+                <div class="form-group">
+                    <label>F-16 QRA</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="f16Count" value="2" min="0" max="10" style="width: 60px;">
+                        <select id="f16Ready" style="flex: 1;">
+                            <option value="READY">Gotowy</option>
+                            <option value="STANDBY_15MIN" selected>Gotowość 15 min</option>
+                            <option value="MAINTENANCE">Konserwacja</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>MiG-29 QRA (Legacy)</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="mig29Count" value="0" min="0" max="10" style="width: 60px;">
+                        <select id="mig29Ready">
+                            <option value="READY">Gotowy</option>
+                            <option value="STANDBY_15MIN" selected>Gotowość 15 min</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Piorun MANPADS</label>
+                    <input type="number" id="piorunCount" value="8" min="0" max="20">
+                </div>
+
+                <div class="form-group">
+                    <label>Polish EW System</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="ewCount" value="1" min="0" max="5" style="width: 60px;">
+                        <select id="ewReady">
+                            <option value="READY" selected>Gotowy</option>
+                            <option value="MAINTENANCE">Konserwacja</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">Systemy koalicyjne</div>
+
+                <div class="form-group">
+                    <label>Patriot PAC-3 <span class="coalition-badge coalition-us">US</span></label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="patriotCount" value="4" min="0" max="8" style="width: 60px;">
+                        <select id="patriotReady">
+                            <option value="READY" selected>Gotowy</option>
+                            <option value="TRAINING">Trening załogi</option>
+                        </select>
+                    </div>
+                    <div style="font-size: 10px; color: var(--gray); margin-top: 4px;">
+                        Wymaga US clearance • US NOFORN
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>NASAMS <span class="coalition-badge coalition-no">NO</span></label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="nasamsCount" value="2" min="0" max="6" style="width: 60px;">
+                        <select id="nasamsReady">
+                            <option value="READY" selected>Gotowy</option>
+                            <option value="STANDBY_15MIN">Gotowość 15 min</option>
+                        </select>
+                    </div>
+                    <div style="font-size: 10px; color: var(--gray); margin-top: 4px;">
+                        Wymaga NATO clearance
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Sky Sabre <span class="coalition-badge coalition-uk">UK</span></label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="skyCount" value="0" min="0" max="4" style="width: 60px;">
+                        <select id="skyReady">
+                            <option value="READY">Gotowy</option>
+                            <option value="STANDBY_15MIN" selected>Gotowość 15 min</option>
+                        </select>
+                    </div>
+                    <div style="font-size: 10px; color: var(--gray); margin-top: 4px;">
+                        UK ROE • Wymaga UK clearance
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">Informacja systemowa</div>
+                <div style="font-size: 10px; line-height: 1.6; color: var(--gray);">
+                    <div style="margin-bottom: 8px;">
+                        <strong style="color: var(--white);">ARBITER 26MB:</strong> Działanie lokalne (air-gapped)
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <strong style="color: var(--white);">Koordynacja koalicyjna:</strong> Język naturalny bez wymiany danych klasyfikowanych
+                    </div>
+                    <div>
+                        <strong style="color: var(--white);">Decyzja lokalna:</strong> Możliwa w 23 Bazie (Mińsk Mazowiecki) bez łączności z Warszawą
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update status indicators based on context
+        function updateStatusIndicators() {
+            const gpsJammed = document.getElementById('gpsJamming').checked;
+            const link16Jammed = document.getElementById('link16Jam').checked;
+            const natoConnected = document.getElementById('natoCaoc').checked;
+
+            const gpsStatus = document.getElementById('gpsStatus');
+            const link16Status = document.getElementById('link16Status');
+            const natoStatus = document.getElementById('natoStatus');
+
+            gpsStatus.className = 'status-dot ' + (gpsJammed ? 'red' : 'green');
+            link16Status.className = 'status-dot ' + (link16Jammed ? 'red' : 'green');
+            natoStatus.className = 'status-dot ' + (natoConnected ? 'green' : 'amber');
+
+            // Show degraded warning if comms degraded
+            const degradedWarning = document.getElementById('degradedWarning');
+            degradedWarning.style.display = (gpsJammed || link16Jammed || !natoConnected) ? 'block' : 'none';
+        }
+
+        // Listen to checkbox changes
+        document.getElementById('gpsJamming').addEventListener('change', updateStatusIndicators);
+        document.getElementById('link16Jam').addEventListener('change', updateStatusIndicators);
+        document.getElementById('natoCaoc').addEventListener('change', updateStatusIndicators);
+
+        // Initialize
+        updateStatusIndicators();
+
+        function loadKaliningradScenario() {
+            document.getElementById('threatOrigin').value = 'Kaliningrad';
+            document.getElementById('threatType').value = 'Reconnaissance (IL-20, Tu-134)';
+            document.getElementById('priority').value = 'High';
+            document.getElementById('bearing').value = '84';
+            document.getElementById('rangeKm').value = '46';
+            document.getElementById('altitude').value = '7400';
+            document.getElementById('speed').value = '385';
+            document.getElementById('timeToBorder').value = '8.5';
+            document.getElementById('transponder').value = 'OFF';
+            document.getElementById('gpsJamming').checked = true;
+            document.getElementById('link16Jam').checked = true;
+            document.getElementById('natoCaoc').checked = false;
+            document.getElementById('kaliningradCorridor').checked = true;
+            document.getElementById('suwalki').checked = true;
+            document.getElementById('historicalPattern').value = 'Rosyjskie loty IL-20: 2-4 razy miesięcznie, zwykle z transponderem, okazjonalne naruszenia 2-3km';
+
+            updateStatusIndicators();
+        }
+
+        async function processScenario() {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const performanceStats = document.getElementById('performanceStats');
+
+            // Show loading
+            resultsContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Przetwarzanie scenariusza IAMD...</div>
+                    <div style="font-size: 10px; margin-top: 8px; color: var(--gray);">
+                        ARBITER optymalizuje parowanie broń-cel
+                    </div>
+                </div>
+            `;
+
+            // Build request
+            const request = {
+                threat: {
+                    contacts: [
+                        {
+                            source: "Polish_Radar",
+                            track_id: `TRACK-${Date.now()}`,
+                            bearing: parseInt(document.getElementById('bearing').value),
+                            range_km: parseFloat(document.getElementById('rangeKm').value),
+                            altitude_m: parseInt(document.getElementById('altitude').value),
+                            speed_knots: parseFloat(document.getElementById('speed').value),
+                            confidence: 0.85,
+                            classification: document.getElementById('threatType').value,
+                            transponder_status: document.getElementById('transponder').value,
+                            ecm_detected: document.getElementById('gpsJamming').checked,
+                            data_age_seconds: 30
+                        }
+                    ],
+                    threat_type: document.getElementById('threatType').value,
+                    priority: document.getElementById('priority').value,
+                    estimated_bearing: parseInt(document.getElementById('bearing').value),
+                    estimated_range_km: parseFloat(document.getElementById('rangeKm').value),
+                    time_to_border_minutes: parseFloat(document.getElementById('timeToBorder').value),
+                    target_description: `${document.getElementById('threatType').value} zbliża się do polskiej granicy`,
+                    origin: document.getElementById('threatOrigin').value
+                },
+                assets: [],
+                context: {
+                    location: "Northeastern Poland",
+                    weather: "Overcast",
+                    visibility_km: 12,
+                    gps_jamming_active: document.getElementById('gpsJamming').checked,
+                    cellular_disrupted: false,
+                    link16_jamming: document.getElementById('link16Jam').checked,
+                    nato_caoc_connection: document.getElementById('natoCaoc').checked,
+                    kaliningrad_corridor_active: document.getElementById('kaliningradCorridor').checked,
+                    belarus_border_tension: false,
+                    ukrainian_war_spillover_risk: false,
+                    suwalki_gap_monitoring: document.getElementById('suwalki').checked,
+                    us_forces_deployed: parseInt(document.getElementById('patriotCount').value) > 0,
+                    uk_sky_sabre_active: parseInt(document.getElementById('skyCount').value) > 0,
+                    norwegian_nasams_ready: parseInt(document.getElementById('nasamsCount').value) > 0,
+                    strategic_assets_nearby: ["23rd Air Base", "NATO logistics hub"],
+                    civilian_traffic_nearby: false,
+                    escalation_risk: "MEDIUM",
+                    historical_pattern: document.getElementById('historicalPattern').value
+                }
+            };
+
+            // Add assets
+            if (parseInt(document.getElementById('f16Count').value) > 0) {
+                request.assets.push({
+                    system_type: "F-16 QRA (Polish)",
+                    count: parseInt(document.getElementById('f16Count').value),
+                    ready_state: document.getElementById('f16Ready').value,
+                    effective_range_km: 800,
+                    response_time_minutes: document.getElementById('f16Ready').value === 'READY' ? 5 : 12,
+                    cost_per_engagement_pln: 80000,
+                    success_rate: 0.95,
+                    location: "23 Baza Lotnictwa Taktycznego, Mińsk Mazowiecki",
+                    requires_polish_clearance: true,
+                    classification_level: "POLISH_RESTRICTED"
+                });
+            }
+
+            if (parseInt(document.getElementById('patriotCount').value) > 0) {
+                request.assets.push({
+                    system_type: "Patriot PAC-3 (US)",
+                    count: parseInt(document.getElementById('patriotCount').value),
+                    ready_state: document.getElementById('patriotReady').value,
+                    effective_range_km: 160,
+                    response_time_minutes: 2,
+                    cost_per_engagement_pln: 2500000,
+                    success_rate: 0.93,
+                    location: "Forward deployed, Eastern Poland",
+                    requires_us_clearance: true,
+                    requires_nato_clearance: true,
+                    classification_level: "US_NOFORN",
+                    reload_time_minutes: 30,
+                    missiles_available: 16
+                });
+            }
+
+            if (parseInt(document.getElementById('nasamsCount').value) > 0) {
+                request.assets.push({
+                    system_type: "NASAMS (Norwegian)",
+                    count: parseInt(document.getElementById('nasamsCount').value),
+                    ready_state: document.getElementById('nasamsReady').value,
+                    effective_range_km: 50,
+                    response_time_minutes: 3,
+                    cost_per_engagement_pln: 800000,
+                    success_rate: 0.90,
+                    location: "Northeastern Poland",
+                    requires_nato_clearance: true,
+                    reload_time_minutes: 20,
+                    missiles_available: 12
+                });
+            }
+
+            if (parseInt(document.getElementById('piorunCount').value) > 0) {
+                request.assets.push({
+                    system_type: "Piorun MANPADS",
+                    count: parseInt(document.getElementById('piorunCount').value),
+                    ready_state: "READY",
+                    effective_range_km: 6,
+                    response_time_minutes: 1,
+                    cost_per_engagement_pln: 50000,
+                    success_rate: 0.80,
+                    location: "Multiple sites",
+                    requires_polish_clearance: true
+                });
+            }
+
+            if (parseInt(document.getElementById('ewCount').value) > 0) {
+                request.assets.push({
+                    system_type: "Polish EW System",
+                    count: parseInt(document.getElementById('ewCount').value),
+                    ready_state: document.getElementById('ewReady').value,
+                    effective_range_km: 40,
+                    response_time_minutes: 0,
+                    cost_per_engagement_pln: 0,
+                    success_rate: 0.65,
+                    location: "Eastern Border EW Site"
+                });
+            }
+
+            try {
+                const response = await fetch('/v1/c2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(request)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // Update performance stats
+                document.getElementById('totalTime').textContent = Math.round(result.total_time_ms);
+                document.getElementById('arbiterTime').textContent = Math.round(result.arbiter_latency_ms);
+                document.getElementById('optionsCount').textContent = result.options_generated;
+                performanceStats.style.display = 'flex';
+
+                // Display recommendations
+                displayRecommendations(result.ranked_recommendations);
+
+            } catch (error) {
+                resultsContainer.innerHTML = `
+                    <div class="error">
+                        ❌ Błąd: ${error.message}<br>
+                        <small>Upewnij się, że serwis ARBITER działa na http://localhost:8003</small>
+                    </div>
+                `;
+            }
+        }
+
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('resultsContainer');
+
+            if (!recommendations || recommendations.length === 0) {
+                container.innerHTML = '<div class="empty-state">Brak rekomendacji</div>';
+                return;
+            }
+
+            container.innerHTML = recommendations.map((rec, i) => `
+                <div class="recommendation-card ${i === 0 ? 'top' : ''}">
+                    <div class="rec-header">
+                        <div class="rec-rank">#${rec.rank}</div>
+                        <div class="rec-coherence">${(rec.coherence * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="rec-title">${rec.title}</div>
+                    <div class="rec-description">${rec.description}</div>
+                    <div class="rec-meta">
+                        <div class="rec-meta-item">
+                            <div class="rec-meta-label">Koszt</div>
+                            <div class="rec-meta-value">${rec.estimated_cost_pln.toLocaleString()} PLN</div>
+                        </div>
+                        <div class="rec-meta-item">
+                            <div class="rec-meta-label">Sukces</div>
+                            <div class="rec-meta-value">${rec.estimated_success_rate.toFixed(0)}%</div>
+                        </div>
+                        <div class="rec-meta-item">
+                            <div class="rec-meta-label">Koordynacja NATO</div>
+                            <div class="rec-meta-value">${rec.nato_coordination ? 'TAK' : 'NIE'}</div>
+                        </div>
+                        <div class="rec-meta-item">
+                            <div class="rec-meta-label">Zakłócenia OK</div>
+                            <div class="rec-meta-value">${rec.degraded_comms_ok ? 'TAK (local)' : 'NIE'}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
